@@ -1,3 +1,4 @@
+require("dotenv").config();   
 const express = require('express');
 const app =express();
 const mongoose= require('mongoose');
@@ -7,9 +8,10 @@ app.use(cookieParser());
 
 
 const authRouter=require('./routes/auth-route.js')
+const summariseRouter=require('./routes/summarise-route.js')
 
 //Connect to MongoDB
-mongoose.connect('mongodb+srv://vivekkatta295:vivek@cluster0.fmuvhq2.mongodb.net/?appName=Cluster0').then(()=>{
+mongoose.connect(process.env.MONGODB_URL).then(()=>{
  console.log("Connected to MongoDB");
 })
 .catch((err)=>console.log(err));
@@ -24,6 +26,7 @@ app.get('/',(req,res)=>{
 })
 
 app.use('/api/auth',authRouter);
+app.use('/api/summarise',summariseRouter);
 
 
 

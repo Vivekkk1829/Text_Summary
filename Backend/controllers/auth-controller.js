@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
+
 const registerUser = async (req, res) => {
   const { userName, email, password } = req.body;
   try {
@@ -25,13 +26,13 @@ const registerUser = async (req, res) => {
       password: hashPassword,
     });
     await newUser.save();
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Registration Sucessful back",
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Some error Ocuured",
     });
@@ -65,11 +66,10 @@ const loginUser = async (req, res) => {
         email: checkUser.email,
         userName: checkUser.userName,
       },
-      "CLIENT_SECRET_KEY",
+      process.env.JWT_SECRET,
       { expiresIn: "60m" }
     );
-    res
-      .cookie("token", token, {
+    return res.cookie("token", token, {
         httpOnly: true,
         secure: false,
         sameSite: "lax",
@@ -86,7 +86,7 @@ const loginUser = async (req, res) => {
       });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "some error occured during login",
     });
@@ -96,18 +96,18 @@ const loginUser = async (req, res) => {
 const authMiddleware=async(req,res,next)=>{
   const token =req.cookies.token
   if(!token){
-    res.status(400).json({
+    return res.status(400).json({
       success:false,  
       message:"Unauthorised Used"
     })
   }
 
    try {
-      const decoded = jwt.verify(token, "CLIENT_SECRET_KEY");
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = decoded;
       next();
     } catch (error) {
-      res.status(401).json({
+     return  res.status(401).json({
         success: false,
         message: "Unauthorised User!",
       });
