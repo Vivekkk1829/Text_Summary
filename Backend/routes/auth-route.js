@@ -1,16 +1,17 @@
-const express =require('express')
-const {registerUser, loginUser, authMiddleware}=require('../controllers/auth-controller.js')
-const router= express.Router()
+const express = require("express");
+const {
+  registerUser,
+  loginUser,
+  authMiddleware,
+  checkAuth,
+  logoutUser,
+} = require("../controllers/auth-controller");
 
-router.post('/register',registerUser);
-router.post('/login',loginUser);
-router.get('/check-auth',authMiddleware,(req,res)=>{
-  const user = req.user;
-  res.status(200).json({
-    success: true,
-    message: "Authenticated user!",
-    user,
-  });
-})
+const router = express.Router();
 
-module.exports=router;
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+router.get("/check-auth", authMiddleware, checkAuth);
+router.post("/logout", authMiddleware, logoutUser);
+
+module.exports = router;
