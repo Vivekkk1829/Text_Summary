@@ -1,7 +1,7 @@
 
 # 📝 AI Text Summarizer
 
-An AI-powered **Text Summarization Web Application** that allows users to input text (or documents) and receive a concise, meaningful summary.
+An AI-powered **Text Summarization Web Application** that allows users to input text  and receive a concise, meaningful summary.
 
 This project demonstrates the integration of **AI APIs**, **frontend UI**, and **backend services** into a clean, scalable system suitable for real-world applications.
 
@@ -28,8 +28,7 @@ It is useful for summarizing articles, notes, reports, and documents.
 
 ### Frontend
 - React
-- HTML / CSS
-- Axios / Fetch API
+- Axios
 
 ### Backend
 - Node.js
