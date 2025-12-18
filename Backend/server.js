@@ -10,7 +10,7 @@ const authRouter = require("./routes/auth-route.js");
 const summariseRouter = require("./routes/summarise-route.js");
 
 //Connect to MongoDB
-mongoose
+await mongoose
   .connect(process.env.MONGODB_URL)
   .then(() => {
     console.log("Connected to MongoDB");
