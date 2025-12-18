@@ -1,117 +1,175 @@
 const bcrypt = require("bcryptjs");
-const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
+/* ================= REGISTER ================= */
 
 const registerUser = async (req, res) => {
-  const { userName, email, password } = req.body;
   try {
-    const checkUser = await User.findOne({ email });
-    if (checkUser)
-      return res.json({
-        success: false,
-        message: "Email already Exists Please Try again with different one",
-      });
-    const checkUserName = await User.findOne({ userName });
-    if (checkUserName)
-      return res.json({
-        success: false,
-        message: "Username already Exists Please Try again with different one",
-      });
+    const { userName, email, password } = req.body;
 
-    const hashPassword = await bcrypt.hash(password, 10);
+    if (!userName || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res.status(409).json({
+        success: false,
+        message: "Email already exists",
+      });
+    }
+
+    const existingUsername = await User.findOne({ userName });
+    if (existingUsername) {
+      return res.status(409).json({
+        success: false,
+        message: "Username already exists",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = new User({
       userName,
       email,
-      password: hashPassword,
+      password: hashedPassword,
     });
+
     await newUser.save();
-    return res.status(200).json({
+
+    return res.status(201).json({
       success: true,
-      message: "Registration Sucessful back",
+      message: "Registration successful",
     });
   } catch (error) {
-    console.log(error);
+    console.error("REGISTER ERROR:", error);
     return res.status(500).json({
       success: false,
-      message: "Some error Ocuured",
+      message: "Server error during registration",
     });
   }
 };
 
+/* ================= LOGIN ================= */
+
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
   try {
-    const checkUser = await User.findOne({ email });
-    if (!checkUser) {
-      return res.json({
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
         success: false,
-        message: "User not Found register",
+        message: "Email and password are required",
       });
     }
-    const checkPasswordMatch = await bcrypt.compare(
-      password,
-      checkUser.password
-    );
-    if (!checkPasswordMatch) {
-      return res.json({
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
         success: false,
-        message: "Incorrect Password! Please try Again",
+        message: "Invalid email or password",
+      });
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
       });
     }
 
     const token = jwt.sign(
       {
-        id: checkUser._id,
-        email: checkUser.email,
-        userName: checkUser.userName,
+        id: user._id,
+        email: user.email,
+        userName: user.userName,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "60m" }
+      { expiresIn: "1h" }
     );
-    return res.cookie("token", token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 60 * 60 * 1000,
-      })
-      .json({
-        success: true,
-        message: "Logged in Sucessfully",
-        user: {
-          email: checkUser.email,
-          id: checkUser._id,
-          userName: checkUser.userName,
-        },
-      });
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,        // REQUIRED for HTTPS (Vercel)
+      sameSite: "none",    // REQUIRED for cross-origin
+      maxAge: 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      user: {
+        id: user._id,
+        email: user.email,
+        userName: user.userName,
+      },
+    });
   } catch (error) {
-    console.log(error);
+    console.error("LOGIN ERROR:", error);
     return res.status(500).json({
       success: false,
-      message: "some error occured during login",
+      message: "Server error during login",
     });
   }
 };
 
-const authMiddleware=async(req,res,next)=>{
-  const token =req.cookies.token
-  if(!token){
-    return res.status(400).json({
-      success:false,  
-      message:"Unauthorised Used"
-    })
-  }
+/* ================= AUTH MIDDLEWARE ================= */
 
-   try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decoded;
-      next();
-    } catch (error) {
-     return  res.status(401).json({
+const authMiddleware = async (req, res, next) => {
+  try {
+    const token = req.cookies?.token;
+
+    if (!token) {
+      return res.status(401).json({
         success: false,
-        message: "Unauthorised User!",
+        message: "Unauthorized user",
       });
     }
-}
 
-module.exports = { registerUser, loginUser ,authMiddleware};
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired token",
+    });
+  }
+};
+
+/* ================= CHECK AUTH ================= */
+
+const checkAuth = async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    user: req.user,
+  });
+};
+
+/* ================= LOGOUT ================= */
+
+const logoutUser = async (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  authMiddleware,
+  checkAuth,
+  logoutUser,
+};
