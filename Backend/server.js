@@ -10,30 +10,30 @@ const authRouter = require("./routes/auth-route.js");
 const summariseRouter = require("./routes/summarise-route.js");
 
 //Connect to MongoDB
-await mongoose
+mongoose
   .connect(process.env.MONGODB_URL)
   .then(() => {
     console.log("Connected to MongoDB");
+    app.use(
+      cors({
+        origin: "https://text-summary-6plv.vercel.app",
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+      })
+    );
+    app.use(express.json());
+
+    app.get("/", (req, res) => {
+      res.send("Hello");
+    });
+
+    app.use("/api/auth", authRouter);
+    app.use("/api/summarise", summariseRouter);
+
+    const port = 3000;
+    app.listen(port, () => {
+      console.log(`App is tunning sucessfully on ${port}`);
+    });
   })
   .catch((err) => console.log(err));
-app.use(
-  cors({
-    origin: "https://text-summary-6plv.vercel.app",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-app.use(express.json());
-
-app.get("/", (req, res) => {
-  res.send("Hello");
-});
-
-app.use("/api/auth", authRouter);
-app.use("/api/summarise", summariseRouter);
-
-const port = 3000;
-app.listen(port, () => {
-  console.log(`App is tunning sucessfully on ${port}`);
-});
