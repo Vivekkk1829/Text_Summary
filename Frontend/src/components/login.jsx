@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import api from "../services/api";
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,7 +17,7 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:3000/api/auth/login", { email, password },{ withCredentials: true });
+      const res = await axios.post(`${BASE_URL}/api/auth/login`, { email, password },{ withCredentials: true });
       if(!res.data.success){
         setError(res.data.message);
         return;
@@ -173,7 +173,6 @@ export default function Login() {
             {loading ? "Logging in..." : "Login"}
           </button>
 
-          {/* 🔽 NEW FOOTER */}
           <p className="footer-text">
             Don’t have an account?{" "}
             <span onClick={() => navigate("/register")}>Register</span>

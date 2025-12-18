@@ -1,5 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
 
 export default function Summarise({ user }) {
   const [text, setText] = useState("");
@@ -14,7 +16,7 @@ export default function Summarise({ user }) {
       setSummary("");
 
       const response = await axios.post(
-        "http://localhost:3000/api/summarise",
+        `${BASE_URL}/api/summarise`,
         { text },
         {
           withCredentials: true, 

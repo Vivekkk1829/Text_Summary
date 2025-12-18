@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import axios from "axios";
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function ProtectedRoute({ children }) {
   const [loading, setLoading] = useState(true);
@@ -9,7 +10,7 @@ export default function ProtectedRoute({ children }) {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/api/auth/check-auth", {
+      .get(`${BASE_URL}/api/auth/check-auth`, {
         withCredentials: true,
       })
       .then((res) => {
