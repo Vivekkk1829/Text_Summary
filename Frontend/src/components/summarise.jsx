@@ -9,7 +9,10 @@ export default function Summarise({ user }) {
   const [loading, setLoading] = useState(false);
 
   const handleSummarise = async () => {
-    if (!text.trim()) return;
+    if (!text.trim()) {
+      alert("Enter some text to summarise")
+      return;
+    }
 
     try {
       setLoading(true);
@@ -22,7 +25,7 @@ export default function Summarise({ user }) {
           withCredentials: true, 
         }
       );
-
+     
       setSummary(response.data.summary);
     } catch (error) {
       console.error(error);
