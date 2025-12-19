@@ -8,6 +8,7 @@ app.use(cookieParser());
 
 const authRouter = require("./routes/auth-route.js");
 const summariseRouter = require("./routes/summarise-route.js");
+const summariseHistoryRouter = require("./routes/summary-history-route.js");
 
 //Connect to MongoDB
 mongoose
@@ -31,6 +32,7 @@ mongoose
 
     app.use("/api/auth", authRouter);
     app.use("/api/summarise", summariseRouter);
+    app.use("/api/getSummaries", summariseHistoryRouter);
 
     const port = 3000;
     app.listen(port, () => {

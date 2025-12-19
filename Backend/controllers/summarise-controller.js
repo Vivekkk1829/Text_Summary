@@ -11,7 +11,7 @@ const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 500;
 
 function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function generateInputHash(text) {
@@ -47,23 +47,23 @@ const summariseText = async (req, res) => {
     const { text } = req.body;
     const userId = req.user.id;
 
-    // 1️⃣ Input handling
+    // 1️⃣ Input validation
     if (typeof text !== "string" || !text.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Text is required"
+        message: "Text is required",
       });
     }
 
-    // 2️⃣ IDEMPOTENCY
+    // 2️⃣ Idempotency
     const inputHash = generateInputHash(text);
-
     const existingSummary = await Summary.findOne({ userId, inputHash });
+
     if (existingSummary) {
       return res.json({
         success: true,
         summary: existingSummary.summary,
-        cached: true
+        cached: true,
       });
     }
 
@@ -71,11 +71,11 @@ const summariseText = async (req, res) => {
     let strategy = "single-pass";
     let chunksCount = 1;
 
-    // 3️⃣ FAST PATH
+    // 3️⃣ Fast path
     if (text.length <= MAX_CHARS) {
       finalSummary = await summariseTextWithGemini(text);
-    }
-    // 4️⃣ CHUNKING PATH
+    } 
+    // 4️⃣ Chunked summarization
     else {
       strategy = "hierarchical";
       const chunks = chunkText(text, CHUNK_SIZE);
@@ -83,9 +83,8 @@ const summariseText = async (req, res) => {
 
       let rollingSummary = "";
 
-      for (let index = 0; index < chunks.length; index++) {
-        const prompt =
-`You are maintaining a running summary.
+      for (let i = 0; i < chunks.length; i++) {
+        const prompt = `You are maintaining a running summary.
 
 Rules:
 - Maximum ${MAX_SUMMARY_WORDS} words
@@ -96,11 +95,11 @@ Previous summary:
 ${rollingSummary || "None"}
 
 New text:
-${chunks[index]}
+${chunks[i]}
 
 Update the summary.`;
 
-        rollingSummary = await summarizeChunkWithRetry(prompt, index);
+        rollingSummary = await summarizeChunkWithRetry(prompt, i);
 
         if (rollingSummary.length > MAX_SUMMARY_CHARS) {
           rollingSummary = await summariseTextWithGemini(
@@ -112,25 +111,26 @@ Update the summary.`;
       finalSummary = rollingSummary;
     }
 
-    // 5️⃣ STORE RESULT
-    await Summary.create({
+    // 5️⃣ Store in MongoDB
+    const savedSummary = await Summary.create({
       userId,
       inputHash,
       summary: finalSummary,
       strategy,
-      chunks: chunksCount
+      chunks: chunksCount,
     });
+
+
 
     return res.json({
       success: true,
-      summary: finalSummary
+      summary: finalSummary,
     });
-
   } catch (error) {
     console.error("Summarization Error:", error.message);
     return res.status(500).json({
       success: false,
-      message: "Summarization failed"
+      message: "Summarization failed",
     });
   }
 };

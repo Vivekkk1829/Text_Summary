@@ -1,16 +1,18 @@
 import { useState } from "react";
 import axios from "axios";
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import { useNavigate } from "react-router-dom";
 
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function Summarise({ user }) {
   const [text, setText] = useState("");
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSummarise = async () => {
     if (!text.trim()) {
-      alert("Enter some text to summarise")
+      alert("Enter some text to summarise");
       return;
     }
 
@@ -21,11 +23,9 @@ export default function Summarise({ user }) {
       const response = await axios.post(
         `${BASE_URL}/api/summarise`,
         { text },
-        {
-          withCredentials: true, 
-        }
+        { withCredentials: true }
       );
-     
+
       setSummary(response.data.summary);
     } catch (error) {
       console.error(error);
@@ -37,147 +37,172 @@ export default function Summarise({ user }) {
 
   return (
     <>
+      {/* ---------- STYLES ---------- */}
       <style>{`
-          * {
-            box-sizing: border-box;
-          }
+        * {
+          box-sizing: border-box;
+        }
 
-          body {
-            margin: 0;
-            font-family: Inter, system-ui, sans-serif;
-            background: #f8fafc;
-            color: #0f172a;
-          }
+        body {
+          margin: 0;
+          font-family: Inter, system-ui, sans-serif;
+          background: #f8fafc;
+          color: #0f172a;
+        }
 
-          /* ---------- NAVBAR ---------- */
-          .navbar {
-            height: 64px;
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 32px;
-          }
+        /* ---------- NAVBAR ---------- */
+        .navbar {
+          height: 64px;
+          background: #ffffff;
+          border-bottom: 1px solid #e5e7eb;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 32px;
+        }
 
-          .logo {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2563eb;
-          }
+        .logo {
+          font-size: 18px;
+          font-weight: 600;
+          color: #2563eb;
+        }
 
-          .user-info {
-            text-align: right;
-            font-size: 13px;
-          }
+        .nav-right {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
 
-          .user-info strong {
-            display: block;
-            font-size: 14px;
-          }
+        .nav-link {
+          background: transparent;
+          border: none;
+          color: #2563eb;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+        }
 
-          .user-info span {
-            color: #64748b;
-          }
+        .user-info {
+          text-align: right;
+          font-size: 13px;
+        }
 
-          /* ---------- PAGE ---------- */
-          .page {
-            display: flex;
-            justify-content: center;
-            padding: 40px 20px;
-          }
+        .user-info strong {
+          display: block;
+          font-size: 14px;
+        }
 
-          .card {
-            width: 100%;
-            max-width: 800px;
-            background: #ffffff;
-            padding: 32px;
-            border-radius: 14px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-          }
+        .user-info span {
+          color: #64748b;
+        }
 
-          .card h2 {
-            margin-top: 0;
-            margin-bottom: 8px;
-            font-size: 24px;
-          }
+        /* ---------- PAGE ---------- */
+        .page {
+          display: flex;
+          justify-content: center;
+          padding: 40px 20px;
+        }
 
-          .card p {
-            margin-top: 0;
-            color: #64748b;
-            font-size: 14px;
-          }
+        .card {
+          width: 100%;
+          max-width: 800px;
+          background: #ffffff;
+          padding: 32px;
+          border-radius: 14px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
 
-          textarea {
-            width: 100%;
-            min-height: 180px;
-            margin-top: 16px;
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid #cbd5f5;
-            font-size: 14px;
-            outline: none;
-            resize: vertical;
-          }
+        .card h2 {
+          margin-top: 0;
+          margin-bottom: 8px;
+          font-size: 24px;
+        }
 
-          textarea:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
-          }
+        .card p {
+          margin-top: 0;
+          color: #64748b;
+          font-size: 14px;
+        }
 
-          textarea::placeholder {
-            color: #94a3b8;
-          }
+        textarea {
+          width: 100%;
+          min-height: 180px;
+          margin-top: 16px;
+          padding: 14px;
+          border-radius: 10px;
+          border: 1px solid #cbd5f5;
+          font-size: 14px;
+          outline: none;
+          resize: vertical;
+        }
 
-          button {
-            margin-top: 16px;
-            padding: 12px 20px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s ease;
-          }
+        textarea:focus {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+        }
 
-          button:hover {
-            background: #1d4ed8;
-          }
+        textarea:disabled {
+          background: #f1f5f9;
+        }
 
-          button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-          }
+        button.action {
+          margin-top: 16px;
+          padding: 12px 20px;
+          background: #2563eb;
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 15px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background 0.2s ease;
+        }
 
-          .summary-box {
-            margin-top: 28px;
-            padding: 20px;
-            background: #f1f5f9;
-            border-radius: 12px;
-            border-left: 4px solid #2563eb;
-          }
+        button.action:hover {
+          background: #1d4ed8;
+        }
 
-          .summary-box h4 {
-            margin-top: 0;
-            margin-bottom: 8px;
-          }
+        button.action:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
 
-          .empty {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #64748b;
-          }
-        `}</style>
+        .summary-box {
+          margin-top: 28px;
+          padding: 20px;
+          background: #f1f5f9;
+          border-radius: 12px;
+          border-left: 4px solid #2563eb;
+        }
+
+        .summary-box h4 {
+          margin-top: 0;
+          margin-bottom: 8px;
+        }
+
+        .empty {
+          margin-top: 20px;
+          font-size: 14px;
+          color: #64748b;
+        }
+      `}</style>
 
       {/* ---------- NAVBAR ---------- */}
       <div className="navbar">
         <div className="logo">TextSummariser</div>
 
-        <div className="user-info">
-          <strong>{user.userName}</strong>
-          <span>{user.email}</span>
+        <div className="nav-right">
+          <button
+            className="nav-link"
+            onClick={() => navigate("/history")}
+          >
+            History
+          </button>
+
+          <div className="user-info">
+            <strong>{user?.userName}</strong>
+            <span>{user?.email}</span>
+          </div>
         </div>
       </div>
 
@@ -185,15 +210,23 @@ export default function Summarise({ user }) {
       <div className="page">
         <div className="card">
           <h2>Summarise your text</h2>
-          <p>Paste your content below and get a concise summary.</p>
+          <p>
+            Paste your content below. Large inputs are handled automatically
+            using chunking and rolling context.
+          </p>
 
           <textarea
             placeholder="Paste your text here..."
             value={text}
+            disabled={loading}
             onChange={(e) => setText(e.target.value)}
           />
 
-          <button onClick={handleSummarise} disabled={loading}>
+          <button
+            className="action"
+            onClick={handleSummarise}
+            disabled={loading}
+          >
             {loading ? "Summarising..." : "Summarise"}
           </button>
 
