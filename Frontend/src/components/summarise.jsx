@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -8,8 +8,39 @@ export default function Summarise({ user }) {
   const [text, setText] = useState("");
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [showMenu, setShowMenu] = useState(false);
 
+  const navigate = useNavigate();
+  const menuRef = useRef(null);
+
+  // ---------- LOGOUT ----------
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${BASE_URL}/api/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+      alert("Logout failed");
+    }
+  };
+
+  // ---------- CLOSE DROPDOWN ON OUTSIDE CLICK ----------
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // ---------- SUMMARISE ----------
   const handleSummarise = async () => {
     if (!text.trim()) {
       alert("Enter some text to summarise");
@@ -82,9 +113,14 @@ export default function Summarise({ user }) {
           font-weight: 500;
         }
 
+        .user-dropdown {
+          position: relative;
+        }
+
         .user-info {
           text-align: right;
           font-size: 13px;
+          cursor: pointer;
         }
 
         .user-info strong {
@@ -94,6 +130,33 @@ export default function Summarise({ user }) {
 
         .user-info span {
           color: #64748b;
+        }
+
+        .dropdown-menu {
+          position: absolute;
+          top: 52px;
+          right: 0;
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+          padding: 8px;
+          min-width: 140px;
+          z-index: 100;
+        }
+
+        .dropdown-menu button {
+          width: 100%;
+          background: transparent;
+          border: none;
+          padding: 10px 14px;
+          text-align: left;
+          font-size: 14px;
+          cursor: pointer;
+          border-radius: 8px;
+        }
+
+        .dropdown-menu button:hover {
+          background: #f1f5f9;
         }
 
         /* ---------- PAGE ---------- */
@@ -112,18 +175,6 @@ export default function Summarise({ user }) {
           box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
 
-        .card h2 {
-          margin-top: 0;
-          margin-bottom: 8px;
-          font-size: 24px;
-        }
-
-        .card p {
-          margin-top: 0;
-          color: #64748b;
-          font-size: 14px;
-        }
-
         textarea {
           width: 100%;
           min-height: 180px;
@@ -132,13 +183,13 @@ export default function Summarise({ user }) {
           border-radius: 10px;
           border: 1px solid #cbd5f5;
           font-size: 14px;
-          outline: none;
           resize: vertical;
         }
 
         textarea:focus {
           border-color: #2563eb;
           box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+          outline: none;
         }
 
         textarea:disabled {
@@ -155,11 +206,6 @@ export default function Summarise({ user }) {
           font-size: 15px;
           font-weight: 500;
           cursor: pointer;
-          transition: background 0.2s ease;
-        }
-
-        button.action:hover {
-          background: #1d4ed8;
         }
 
         button.action:disabled {
@@ -175,11 +221,6 @@ export default function Summarise({ user }) {
           border-left: 4px solid #2563eb;
         }
 
-        .summary-box h4 {
-          margin-top: 0;
-          margin-bottom: 8px;
-        }
-
         .empty {
           margin-top: 20px;
           font-size: 14px;
@@ -192,16 +233,24 @@ export default function Summarise({ user }) {
         <div className="logo">TextSummariser</div>
 
         <div className="nav-right">
-          <button
-            className="nav-link"
-            onClick={() => navigate("/history")}
-          >
+          <button className="nav-link" onClick={() => navigate("/history")}>
             History
           </button>
 
-          <div className="user-info">
-            <strong>{user?.userName}</strong>
-            <span>{user?.email}</span>
+          <div className="user-dropdown" ref={menuRef}>
+            <div
+              className="user-info"
+              onClick={() => setShowMenu(!showMenu)}
+            >
+              <strong>{user?.userName}</strong>
+              <span>{user?.email}</span>
+            </div>
+
+            {showMenu && (
+              <div className="dropdown-menu">
+                <button onClick={handleLogout}>Logout</button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -210,10 +259,7 @@ export default function Summarise({ user }) {
       <div className="page">
         <div className="card">
           <h2>Summarise your text</h2>
-          <p>
-            Paste your content below. Large inputs are handled automatically
-            using chunking and rolling context.
-          </p>
+          <p>Paste your content below. Large inputs are handled automatically.</p>
 
           <textarea
             placeholder="Paste your text here..."
@@ -222,11 +268,7 @@ export default function Summarise({ user }) {
             onChange={(e) => setText(e.target.value)}
           />
 
-          <button
-            className="action"
-            onClick={handleSummarise}
-            disabled={loading}
-          >
+          <button className="action" onClick={handleSummarise} disabled={loading}>
             {loading ? "Summarising..." : "Summarise"}
           </button>
 
@@ -238,9 +280,7 @@ export default function Summarise({ user }) {
           )}
 
           {!summary && !loading && (
-            <p className="empty">
-              Your summary will appear here after processing.
-            </p>
+            <p className="empty">Your summary will appear here.</p>
           )}
         </div>
       </div>
